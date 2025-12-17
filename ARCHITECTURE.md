@@ -60,14 +60,12 @@ config = simulation_config.SimulationConfig()
 **Key Components**:
 - `base_guidance.py`: Base guidance interface
 - `waypoint_guidance.py`: Waypoint guidance using Clohessy-Wiltshire equations
-- `mpc_guidance.py`: Model Predictive Control guidance
 - `geo_rendezvous_guidance.py`: GEO rendezvous with multiple modes
 - `approach_guidance.py`: Approach guidance for servicing frame
 
 **Key Classes**:
 - `BaseGuidance`: Abstract base class for all guidance algorithms
 - `WaypointGuidance`: Waypoint tracking guidance
-- `MPCGuidance`: MPC-based guidance
 - `GEORendezvousGuidance`: GEO rendezvous with fast/fuel-optimal/balanced modes
 - `ApproachGuidance`: Servicing frame approach guidance
 
@@ -79,14 +77,14 @@ config = simulation_config.SimulationConfig()
 - `base_sensor.py`: Base sensor interface
 - `camera1.py`: Camera1 sensor for azimuth/elevation (az/el) measurements from chaser to target
 - `ground_station_sensor.py`: Ground station sensor (range/range-rate/az/el)
-- `pose_sensor.py`: Pose sensor simulator (feature-based)
+- `pose_sensor.py`: Pose sensor simulator (feature-based) providing relative position and relative attitude measurements in the pose camera frame
 - `pose_processor.py`: Feature tracking and pose estimation
 
 **Key Classes**:
 - `BaseSensor`: Abstract base class for all sensors
 - `Camera1`: Camera1 sensor for az/el measurements with bias estimation support
 - `GroundStationSensor`: Ground station sensor with visibility checking
-- `PoseSensor`: Pose sensor simulator
+- `PoseSensor`: Pose sensor simulator providing relative position and relative attitude measurements in the pose camera frame
 - `PoseProcessor`: Feature tracking and pose estimation
 
 ### Actuators (`actuators/`)
@@ -211,8 +209,7 @@ config = simulation_config.SimulationConfig()
 
 1. **State Propagation**: Uses RK4 integration for accuracy
 2. **Filter Updates**: EKF uses numerical differentiation for state transition matrix
-3. **Optimization**: MPC uses CVXPY for optimization
-4. **Visualization**: Plotting is separated from simulation loop for performance
+3. **Visualization**: Plotting is separated from simulation loop for performance
 
 ## Future Enhancements
 

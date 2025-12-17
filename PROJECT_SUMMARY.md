@@ -48,14 +48,13 @@ rpo/
 
 3. **Guidance**
    - Waypoint guidance using Clohessy-Wiltshire equations
-   - MPC guidance for docking
    - GEO rendezvous guidance (fast, fuel-optimal, balanced modes)
    - Approach guidance for servicing frame
 
 4. **Sensors**
    - Camera1 (chaser-to-target az/el with bias estimation)
    - Ground station sensor (range/range-rate/az/el with visibility checking)
-   - Pose sensor (feature-based simulator)
+   - Pose sensor (feature-based simulator) providing relative position and relative attitude measurements in the pose camera frame
 
 5. **Actuators**
    - Impulsive burns (instantaneous velocity changes)
@@ -188,7 +187,6 @@ plotting.plot_all(data, ...)
 
 - numpy
 - matplotlib
-- cvxpy (for MPC optimization)
 - scipy (optional, for advanced features)
 
 ## Future Enhancements

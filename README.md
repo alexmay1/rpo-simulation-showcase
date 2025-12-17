@@ -8,7 +8,7 @@ This package simulates rendezvous and proximity operations between a chaser and 
 
 - **Orbital Dynamics**: 2-body, J2, and 4x4 spherical harmonic gravity models
 - **Navigation Filters**: Extended Kalman Filter (EKF), Unscented Kalman Filter (UKF), and Particle Filter (PF) for absolute state estimation; Pose filter (MUKF) for relative pose estimation
-- **Guidance Algorithms**: Waypoint guidance, MPC guidance, GEO rendezvous guidance, Approach guidance
+- **Guidance Algorithms**: Waypoint guidance, GEO rendezvous guidance, Approach guidance
 - **Sensors**: Camera1 (az/el), Ground station sensor (range/range-rate/az/el), Pose sensor (feature-based)
 - **Actuators**: Impulsive and finite burn models
 - **Attitude Dynamics**: Quaternion-based attitude propagation with gravity gradient torques
@@ -28,7 +28,6 @@ rpo/
 ├── guidance/            # Guidance algorithms
 │   ├── base_guidance.py
 │   ├── waypoint_guidance.py
-│   ├── mpc_guidance.py
 │   ├── geo_rendezvous_guidance.py
 │   └── approach_guidance.py
 ├── navigation/          # Navigation filters
@@ -95,7 +94,6 @@ plotting.plot_all(data, results['meas_log_times'],
 ### 1. Guidance Algorithms
 
 - **Waypoint Guidance**: Clohessy-Wiltshire based waypoint tracking
-- **MPC Guidance**: Model Predictive Control for docking
 - **GEO Rendezvous**: Multiple modes (fast, fuel-optimal, balanced)
 - **Approach Guidance**: Servicing frame approach
 
@@ -111,7 +109,7 @@ plotting.plot_all(data, results['meas_log_times'],
 
 - **Camera1**: Chaser-to-target azimuth/elevation measurements with bias estimation
 - **Ground Station Sensor**: Range, range-rate, azimuth, elevation from ground station with visibility checking
-- **Pose Sensor**: Feature-based pose estimation (simulator) for relative pose measurements
+- **Pose Sensor**: Feature-based pose estimation (simulator) providing relative position and relative attitude measurements in the pose camera frame
 
 ### 4. Dynamics
 
@@ -130,17 +128,24 @@ Configuration is managed through `SimulationConfig` class:
 
 ```python
 from rpo.config import simulation_config
+import numpy as np
 
 config = simulation_config.SimulationConfig()
 
 # Orbital parameters
-config.a_target = 42164e3  # GEO altitude
-config.e_target = 0.0
-config.i_target = np.radians(0.01)
+config.a_target = 42164e3  # GEO altitude (m)
+config.e_target = 0.0  # Eccentricity
+config.i_target = np.radians(0.01)  # Inclination (rad)
 
 # Simulation parameters
-config.T = 20 * 3600  # 20 hours
-config.dt = 60  # 60 second logging
+config.T = 24 * 4 * 3600  # Total simulation time (s) - 4 days
+config.dt = 600  # Logging time step (s) - 10 minutes
+
+# Initial relative state in curvilinear RIC frame
+config.initial_rel_state = np.array([0, -1000e3, 0, 0, 0, 0])  # [r, along, cross, v_r, v_along, v_cross]
+
+# Filter selection
+config.filter_type = 'ekf'  # 'ekf', 'ukf', or 'pf'
 
 # Dynamics settings
 config.gravity_model = 'J2'  # '2-body', 'J2', or '4x4'
@@ -148,10 +153,14 @@ config.enable_srp = False
 config.enable_third_body = False
 config.enable_drag = False
 
+# Sensor settings
+config.enable_camera1 = True
+config.camera1_interval = 600.0  # Measurement interval (s)
+config.enable_camera1_bias_estimation = True  # Enable bias estimation with Vasicek process
+
 # Guidance settings
-config.waypoint_guidance = [...]
-config.mpc_guidance = {...}
-config.guidance_schedule = [...]
+config.waypoint_guidance = [...]  # Waypoint guidance configuration
+config.guidance_schedule = [...]  # Guidance schedule
 ```
 
 ## Extending the Code
@@ -189,7 +198,6 @@ Planned features:
 
 - numpy
 - matplotlib
-- cvxpy (for MPC optimization)
 - scipy (optional, for advanced features)
 
 ## Testing
@@ -213,7 +221,6 @@ For detailed documentation, see:
 - **README.md**: This file - Overview and quick start
 - **ARCHITECTURE.md**: Detailed architecture documentation
 - **PROJECT_SUMMARY.md**: High-level project summary
-- **MAKING_PUBLIC.md**: Instructions for making this showcase folder public on GitHub
 
 Note: This showcase folder contains only documentation and visualization materials. The full source code is in the private repository.
 

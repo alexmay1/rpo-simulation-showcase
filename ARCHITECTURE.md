@@ -27,8 +27,11 @@ config = simulation_config.SimulationConfig()
 **Key Components**:
 - `orbital_dynamics.py`: Orbital dynamics (gravity, SRP, drag, third-body)
 - `attitude_dynamics.py`: Attitude dynamics (quaternion-based)
+- `attitude_propagation.py`: Attitude propagation utilities
+- `attitude_simulation.py`: Attitude simulation for target and chaser (truth and estimated)
 - `propagator.py`: State propagation (RK4)
 - `coordinate_frames.py`: Coordinate frame transformations (RIC basis)
+- `relative_dynamics.py`: Relative dynamics models
 
 **Key Functions**:
 - `compute_acceleration()`: Compute accelerations for target and chaser
@@ -48,10 +51,10 @@ config = simulation_config.SimulationConfig()
 - `filter_utils.py`: Filter utilities (covariance initialization, process noise)
 
 **Key Classes**:
-- `ExtendedKalmanFilter`: Main EKF for 12-DOF state (target + chaser position/velocity)
-- `UnscentedKalmanFilter`: UKF for 12-DOF state with nonlinear measurement updates
-- `ParticleFilter`: PF for 12-DOF state with configurable number of particles
-- `PoseFilter`: MUKF for 6-DOF relative pose (position + attitude) with 18-DOF state (position, velocity, attitude error, angular velocity, gyro bias, CoM offset)
+- `ExtendedKalmanFilter`: Main EKF for 12-DOF state (or 14-DOF with bias estimation) - target + chaser position/velocity
+- `UnscentedKalmanFilter`: UKF for 12-DOF state (or 14-DOF with bias estimation) with nonlinear measurement updates
+- `ParticleFilter`: PF for 12-DOF state (or 14-DOF with bias estimation) with configurable number of particles
+- `PoseFilter`: MUKF for relative pose estimation with 18-DOF state (position, velocity, attitude error, angular velocity, gyro bias, CoM offset)
 
 ### Guidance (`guidance/`)
 
@@ -148,11 +151,18 @@ config = simulation_config.SimulationConfig()
 
 ## State Vector
 
-### Main EKF State (12-DOF)
+### Main Filter State (EKF/UKF/PF)
+
+**12-DOF (without bias estimation):**
 - `X[0:3]`: Target position in ECI frame (m)
 - `X[3:6]`: Target velocity in ECI frame (m/s)
 - `X[6:9]`: Chaser position in ECI frame (m)
 - `X[9:12]`: Chaser velocity in ECI frame (m/s)
+
+**14-DOF (with bias estimation):**
+- `X[0:12]`: Same as 12-DOF above
+- `X[12]`: Camera azimuth bias (rad)
+- `X[13]`: Camera elevation bias (rad)
 
 ### Pose Filter State (18-DOF)
 - `X[0:3]`: Relative position in RIC frame (m) [x (radial), y (along-track), z (crosstrack)]
@@ -163,15 +173,19 @@ config = simulation_config.SimulationConfig()
 - `X[15:18]`: Target CoM offset in target body frame (m)
 - Note: The filter uses multiplicative quaternion updates where the quaternion estimate is stored separately and the covariance tracks the small-angle error vector.
 
-### Extended State (with attitude, 24-DOF)
-- `X[0:3]`: Target position in ECI frame (m)
-- `X[3:6]`: Target velocity in ECI frame (m/s)
-- `X[6:10]`: Target quaternion [q0, q1, q2, q3] (scalar-first, body to inertial)
-- `X[10:13]`: Target angular velocity in body frame (rad/s)
-- `X[13:16]`: Chaser position in ECI frame (m)
-- `X[16:19]`: Chaser velocity in ECI frame (m/s)
-- `X[19:23]`: Chaser quaternion [q0, q1, q2, q3] (scalar-first, body to inertial)
-- `X[23:26]`: Chaser angular velocity in body frame (rad/s)
+### Attitude States (Separate from Filter States)
+
+Attitude states are propagated separately from the navigation filter states using the attitude simulation module. The attitude states include:
+
+**Target Attitude:**
+- Quaternion [q0, q1, q2, q3] (scalar-first, body to inertial)
+- Angular velocity in body frame (rad/s)
+
+**Chaser Attitude:**
+- Quaternion [q0, q1, q2, q3] (scalar-first, body to inertial)
+- Angular velocity in body frame (rad/s)
+
+Both truth and estimated attitudes are propagated separately. The attitude simulation module (`attitude_simulation.py`) handles attitude propagation with support for pointing modes (e.g., RIC-aligned attitude).
 
 ## Coordinate Frames
 

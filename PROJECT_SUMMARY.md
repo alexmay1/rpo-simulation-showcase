@@ -37,10 +37,10 @@ rpo/
    - Third-body gravity (Sun and Moon)
 
 2. **Navigation**
-   - Extended Kalman Filter (EKF) for absolute state estimation (12-DOF)
-   - Unscented Kalman Filter (UKF) for absolute state estimation (12-DOF)
-   - Particle Filter (PF) for absolute state estimation (12-DOF)
-   - Pose filter (MUKF) for relative pose estimation (6-DOF)
+   - Extended Kalman Filter (EKF) for absolute state estimation (12-DOF, or 14-DOF with bias estimation)
+   - Unscented Kalman Filter (UKF) for absolute state estimation (12-DOF, or 14-DOF with bias estimation)
+   - Particle Filter (PF) for absolute state estimation (12-DOF, or 14-DOF with bias estimation)
+   - Pose filter (MUKF) for relative pose estimation (18-DOF: position, velocity, attitude error, angular velocity, gyro bias, CoM offset)
    - Process noise modeling
    - Measurement processing with outlier detection
    - Camera bias estimation with Vasicek process (for EKF, UKF, PF)
@@ -60,11 +60,13 @@ rpo/
    - Impulsive burns (instantaneous velocity changes)
    - Finite burns (constant acceleration over duration)
 
-6. **Attitude Dynamics**
+6. **Attitude Simulation**
+   - Attitude simulation module (`attitude_simulation.py`) for propagating target and chaser attitudes
    - Quaternion-based attitude representation
    - Attitude propagation with RK4
    - Gravity gradient torques
-   - Support for control torques
+   - Support for pointing modes (RIC-aligned attitude)
+   - Separate truth and estimated attitude propagation
 
 7. **Visualization**
    - Relative position/velocity error plots
@@ -133,15 +135,26 @@ plotting.plot_all(data, ...)
 
 ## State Vectors
 
-### Main EKF State (12-DOF)
+### Main Filter State (EKF/UKF/PF)
+**12-DOF (without bias estimation):**
 - `X[0:3]`: Target position in ECI frame (m)
 - `X[3:6]`: Target velocity in ECI frame (m/s)
 - `X[6:9]`: Chaser position in ECI frame (m)
 - `X[9:12]`: Chaser velocity in ECI frame (m/s)
 
-### Pose Filter State (7-DOF)
-- `X[0:3]`: Relative position in target body frame (m)
-- `X[3:7]`: Relative quaternion [q0, q1, q2, q3] (scalar-first)
+**14-DOF (with bias estimation):**
+- `X[0:12]`: Same as 12-DOF above
+- `X[12]`: Camera azimuth bias (rad)
+- `X[13]`: Camera elevation bias (rad)
+
+### Pose Filter State (18-DOF)
+- `X[0:3]`: Relative position in RIC frame (m) [x (radial), y (along-track), z (crosstrack)]
+- `X[3:6]`: Relative velocity in RIC frame (m/s)
+- `X[6:9]`: Relative attitude error (multiplicative small-angle error vector δα, rad)
+- `X[9:12]`: Relative angular velocity in chaser body frame (rad/s)
+- `X[12:15]`: Chaser gyro bias in chaser body frame (rad/s)
+- `X[15:18]`: Target CoM offset in target body frame (m)
+- Note: The filter uses multiplicative quaternion updates where the quaternion estimate is stored separately and the covariance tracks the small-angle error vector.
 
 ## Coordinate Frames
 

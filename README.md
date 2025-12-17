@@ -23,8 +23,11 @@ rpo/
 ├── dynamics/            # Orbital and attitude dynamics
 │   ├── orbital_dynamics.py
 │   ├── attitude_dynamics.py
+│   ├── attitude_propagation.py
+│   ├── attitude_simulation.py
 │   ├── propagator.py
-│   └── coordinate_frames.py
+│   ├── coordinate_frames.py
+│   └── relative_dynamics.py
 ├── guidance/            # Guidance algorithms
 │   ├── base_guidance.py
 │   ├── waypoint_guidance.py
@@ -99,11 +102,11 @@ plotting.plot_all(data, results['meas_log_times'],
 
 ### 2. Navigation Filters
 
-- **EKF**: Extended Kalman Filter for absolute state estimation (12-DOF: target + chaser position/velocity)
-- **UKF**: Unscented Kalman Filter for absolute state estimation (12-DOF) with nonlinear measurement updates
-- **PF**: Particle Filter for absolute state estimation (12-DOF) with configurable number of particles
-- **Pose Filter**: Multiplicative Unscented Kalman Filter (MUKF) for 6-DOF relative pose estimation (position + attitude)
-- **Bias Estimation**: Camera bias estimation using Vasicek process (available in EKF, UKF, PF)
+- **EKF**: Extended Kalman Filter for absolute state estimation (12-DOF, or 14-DOF with bias estimation)
+- **UKF**: Unscented Kalman Filter for absolute state estimation (12-DOF, or 14-DOF with bias estimation) with nonlinear measurement updates
+- **PF**: Particle Filter for absolute state estimation (12-DOF, or 14-DOF with bias estimation) with configurable number of particles
+- **Pose Filter**: Multiplicative Unscented Kalman Filter (MUKF) for relative pose estimation (18-DOF: position, velocity, attitude error, angular velocity, gyro bias, CoM offset)
+- **Bias Estimation**: Camera bias estimation using Vasicek process (available in EKF, UKF, PF, extends state to 14-DOF)
 
 ### 3. Sensors
 
@@ -114,7 +117,7 @@ plotting.plot_all(data, results['meas_log_times'],
 ### 4. Dynamics
 
 - **Orbital Dynamics**: 2-body, J2, 4x4 spherical harmonic gravity
-- **Attitude Dynamics**: Quaternion-based attitude propagation
+- **Attitude Simulation**: Separate attitude propagation for target and chaser (truth and estimated) with quaternion-based representation, RK4 propagation, gravity gradient torques, and pointing modes
 - **Disturbances**: Solar radiation pressure, atmospheric drag, third-body gravity
 
 ### 5. Actuators
